@@ -108,6 +108,14 @@ class OutputWriter:
     def _write_initial_conditions(self, q0: pd.DataFrame):
         """Extracts t=0 state from q0 and writes to the first NetCDF index."""
         self._nc.variables['time'][0] = 0 # 0 minutes elapsed
+
+        if self._need_nex_flow and 'qu0' in q0.columns:
+            for nid, pos in self._nex_id_to_pos.items():
+                upstream = self._nex_upstream.get(nid, [])
+                if upstream:
+                    self._nc.variables['nex_streamflow'][0, pos] = (
+                        q0['qu0'].reindex(upstream).sum(skipna=False)
+                    )
         
         # Flowpaths
         if len(self._wb_ids):
